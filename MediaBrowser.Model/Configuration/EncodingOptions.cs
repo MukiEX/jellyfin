@@ -20,6 +20,12 @@ public class EncodingOptions
         EnableAudioVbr = false;
         DownMixAudioBoost = 2;
         DownMixStereoAlgorithm = DownMixStereoAlgorithms.None;
+        LakeHpFilterPath = string.Empty;
+        LakeHpRoom = 2;
+        LakeHpSurroundAzimuth = 118;
+        LakeHpRearAzimuth = 118;
+        LakeHpMatrixMode = "plii";
+        LakeHpMatrixLfe = true;
         MaxMuxingQueueSize = 2048;
         EnableThrottling = false;
         ThrottleDelaySeconds = 180;
@@ -99,6 +105,38 @@ public class EncodingOptions
     /// Gets or sets the algorithm used for downmixing audio to stereo.
     /// </summary>
     public DownMixStereoAlgorithms DownMixStereoAlgorithm { get; set; }
+
+    /// <summary>
+    /// Gets or sets the file the LakeHP headphone virtualizer loads its room filters from
+    /// (the original DLL, a LakeHP filter region or a raw filter). Empty means the first
+    /// file found in the "lakehp" folder of the data directory.
+    /// </summary>
+    public string LakeHpFilterPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the LakeHP virtual room: 1 small, 2 medium, 3 large.
+    /// </summary>
+    public int LakeHpRoom { get; set; }
+
+    /// <summary>
+    /// Gets or sets the LakeHP surround speaker azimuth in degrees (side speakers in 7.1), 90 to 165. 118 is the filters as made.
+    /// </summary>
+    public float LakeHpSurroundAzimuth { get; set; }
+
+    /// <summary>
+    /// Gets or sets the LakeHP 7.1 rear speaker azimuth in degrees, 90 to 165. The same value as the surrounds folds the rears into them.
+    /// </summary>
+    public float LakeHpRearAzimuth { get; set; }
+
+    /// <summary>
+    /// Gets or sets the matrix surround encoding: "plii" (Pro Logic II, stereo surrounds) or "pl" (Pro Logic, mono surround).
+    /// </summary>
+    public string LakeHpMatrixMode { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether matrix surround mixes the LFE channel into the fronts at -3 dB.
+    /// </summary>
+    public bool LakeHpMatrixLfe { get; set; }
 
     /// <summary>
     /// Gets or sets the maximum size of the muxing queue.

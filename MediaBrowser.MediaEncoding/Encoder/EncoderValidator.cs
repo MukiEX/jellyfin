@@ -107,6 +107,9 @@ namespace MediaBrowser.MediaEncoding.Encoder
             "alphasrc",
             "zscale",
             "tonemapx",
+            // audio
+            "lakehp",
+            "matrixenc",
             // qsv
             "scale_qsv",
             "vpp_qsv",

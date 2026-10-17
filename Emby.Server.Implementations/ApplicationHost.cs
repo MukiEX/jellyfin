@@ -25,6 +25,7 @@ using Emby.Server.Implementations.Devices;
 using Emby.Server.Implementations.Dto;
 using Emby.Server.Implementations.HttpServer.Security;
 using Emby.Server.Implementations.IO;
+using Emby.Server.Implementations.LakeHp;
 using Emby.Server.Implementations.Library;
 using Emby.Server.Implementations.Library.Search;
 using Emby.Server.Implementations.Library.SimilarItems;
@@ -566,6 +567,7 @@ namespace Emby.Server.Implementations
 
             serviceCollection.AddSingleton<IMediaEncoder, MediaBrowser.MediaEncoding.Encoder.MediaEncoder>();
             serviceCollection.AddSingleton<EncodingHelper>();
+            serviceCollection.AddSingleton<ILakeHpManager, LakeHpManager>();
             serviceCollection.AddSingleton<IPathManager, PathManager>();
             serviceCollection.AddSingleton<IExternalDataManager, ExternalDataManager>();
 

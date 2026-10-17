@@ -24,6 +24,7 @@ using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Model.Dlna;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.LakeHp;
 using MediaBrowser.Model.MediaInfo;
 using MediaBrowser.Model.Session;
 using Microsoft.AspNetCore.Http;
@@ -46,6 +47,7 @@ public class MediaInfoHelper
     private readonly INetworkManager _networkManager;
     private readonly IDeviceManager _deviceManager;
     private readonly IServerApplicationHost _appHost;
+    private readonly ILakeHpManager _lakeHp;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MediaInfoHelper"/> class.
@@ -59,6 +61,7 @@ public class MediaInfoHelper
     /// <param name="networkManager">Instance of the <see cref="INetworkManager"/> interface.</param>
     /// <param name="deviceManager">Instance of the <see cref="IDeviceManager"/> interface.</param>
     /// <param name="appHost">Instance of the <see cref="IServerApplicationHost"/> interface.</param>
+    /// <param name="lakeHp">Instance of the <see cref="ILakeHpManager"/> interface.</param>
     public MediaInfoHelper(
         IUserManager userManager,
         ILibraryManager libraryManager,
@@ -68,7 +71,8 @@ public class MediaInfoHelper
         ILogger<MediaInfoHelper> logger,
         INetworkManager networkManager,
         IDeviceManager deviceManager,
-        IServerApplicationHost appHost)
+        IServerApplicationHost appHost,
+        ILakeHpManager lakeHp)
     {
         _userManager = userManager;
         _libraryManager = libraryManager;
@@ -79,6 +83,7 @@ public class MediaInfoHelper
         _networkManager = networkManager;
         _deviceManager = deviceManager;
         _appHost = appHost;
+        _lakeHp = lakeHp;
     }
 
     /// <summary>
@@ -201,6 +206,13 @@ public class MediaInfoHelper
         IPAddress ipAddress)
     {
         var streamBuilder = new StreamBuilder(_mediaEncoder, _logger);
+
+        // LakeHP surround output (headphones / matrix surround): ask for stereo so surround is rendered here
+        if (_lakeHp.GetActiveMode(userId, claimsPrincipal.GetDeviceId()) != LakeHpOutputMode.Off)
+        {
+            _lakeHp.ForceStereo(profile);
+            maxAudioChannels = maxAudioChannels is null ? 2 : Math.Min(maxAudioChannels.Value, 2);
+        }
 
         var options = new MediaOptions
         {

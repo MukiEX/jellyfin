@@ -397,6 +397,7 @@ public class EncodingHelperTests
             subtitleEncoder.Object,
             config.Object,
             configurationManager.Object,
-            pathManager.Object);
+            pathManager.Object,
+            Mock.Of<ILakeHpManager>());
     }
 }

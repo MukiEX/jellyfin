@@ -45,7 +45,8 @@ namespace Jellyfin.Api.Tests.Helpers
                 Mock.Of<ILogger<MediaInfoHelper>>(),
                 Mock.Of<INetworkManager>(),
                 Mock.Of<IDeviceManager>(),
-                appHost ?? Mock.Of<IServerApplicationHost>());
+                appHost ?? Mock.Of<IServerApplicationHost>(),
+                Mock.Of<ILakeHpManager>());
         }
 
         private static MediaSourceInfo CreateSource(Guid itemId, int bitrate, bool supportsDirectPlay = true)

@@ -64,6 +64,7 @@ namespace MediaBrowser.Controller.MediaEncoding
         private readonly IConfiguration _config;
         private readonly IConfigurationManager _configurationManager;
         private readonly IPathManager _pathManager;
+        private readonly ILakeHpManager _lakeHp;
 
         // i915 hang was fixed by linux 6.2 (3f882f2)
         private readonly Version _minKerneli915Hang = new Version(5, 18);
@@ -165,7 +166,8 @@ namespace MediaBrowser.Controller.MediaEncoding
             ISubtitleEncoder subtitleEncoder,
             IConfiguration config,
             IConfigurationManager configurationManager,
-            IPathManager pathManager)
+            IPathManager pathManager,
+            ILakeHpManager lakeHp)
         {
             _appPaths = appPaths;
             _mediaEncoder = mediaEncoder;
@@ -173,6 +175,7 @@ namespace MediaBrowser.Controller.MediaEncoding
             _config = config;
             _configurationManager = configurationManager;
             _pathManager = pathManager;
+            _lakeHp = lakeHp;
         }
 
         private enum DynamicHdrMetadataRemovalPlan
@@ -2958,6 +2961,32 @@ namespace MediaBrowser.Controller.MediaEncoding
             return null;
         }
 
+        /// <summary>
+        /// Gets the filter that downmixes the source audio to stereo: the LakeHP headphone
+        /// virtualizer when it is switched on for this user and device, otherwise the
+        /// configured downmix algorithm. Null means ffmpeg's own downmix (-ac 2).
+        /// </summary>
+        /// <param name="state">The encoding job state.</param>
+        /// <param name="encodingOptions">The encoding options.</param>
+        /// <returns>The filter string, or null.</returns>
+        public string GetDownMixFilter(EncodingJobInfo state, EncodingOptions encodingOptions)
+        {
+            if (state.AudioStream is null)
+            {
+                return null;
+            }
+
+            var lakeHp = _lakeHp.GetFilter(state.AudioStream, encodingOptions, state.User?.Id, state.BaseRequest?.DeviceId);
+            if (lakeHp is not null)
+            {
+                return lakeHp;
+            }
+
+            return DownMixAlgorithmsHelper.AlgorithmFilterStrings.TryGetValue((encodingOptions.DownMixStereoAlgorithm, DownMixAlgorithmsHelper.InferChannelLayout(state.AudioStream)), out var filter)
+                ? filter
+                : null;
+        }
+
         public string GetAudioFilterParam(EncodingJobInfo state, EncodingOptions encodingOptions)
         {
             var channels = state.OutputAudioChannels;
@@ -2966,8 +2995,8 @@ namespace MediaBrowser.Controller.MediaEncoding
 
             if (channels is 2 && state.AudioStream?.Channels is > 2)
             {
-                var hasDownMixFilter = DownMixAlgorithmsHelper.AlgorithmFilterStrings.TryGetValue((encodingOptions.DownMixStereoAlgorithm, DownMixAlgorithmsHelper.InferChannelLayout(state.AudioStream)), out var downMixFilterString);
-                if (hasDownMixFilter)
+                var downMixFilterString = GetDownMixFilter(state, encodingOptions);
+                if (downMixFilterString is not null)
                 {
                     filters.Add(downMixFilterString);
                 }
@@ -7877,7 +7906,7 @@ namespace MediaBrowser.Controller.MediaEncoding
             // Must match the condition under which GetAudioFilterParam emits the downmix filter.
             var useDownMixAlgorithm = channels == 2
                                       && state.AudioStream?.Channels > 2
-                                      && DownMixAlgorithmsHelper.AlgorithmFilterStrings.ContainsKey((encodingOptions.DownMixStereoAlgorithm, DownMixAlgorithmsHelper.InferChannelLayout(state.AudioStream)));
+                                      && GetDownMixFilter(state, encodingOptions) is not null;
 
             if (channels.HasValue && !useDownMixAlgorithm)
             {

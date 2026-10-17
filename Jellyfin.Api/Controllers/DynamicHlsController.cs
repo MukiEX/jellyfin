@@ -1738,7 +1738,7 @@ public class DynamicHlsController : BaseJellyfinApiController
 
         var channels = state.OutputAudioChannels;
 
-        var useDownMixAlgorithm = DownMixAlgorithmsHelper.AlgorithmFilterStrings.ContainsKey((_encodingOptions.DownMixStereoAlgorithm, DownMixAlgorithmsHelper.InferChannelLayout(state.AudioStream)));
+        var useDownMixAlgorithm = _encodingHelper.GetDownMixFilter(state, _encodingOptions) is not null;
 
         if (channels.HasValue
             && (channels.Value != 2
